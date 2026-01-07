@@ -28,7 +28,7 @@
       pointer-events: none;
     }
 
-    /* 表：YouTube 全画面（常に cover） */
+    /* 表：YouTube 表示レイヤー */
     .overlay {
       position: fixed;
       inset: 0;
@@ -36,17 +36,40 @@
       overflow: hidden;
     }
 
-    /* 16:9動画を「画面いっぱい」にする */
+    /* YouTube iframe 基本 */
     #yt {
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
       border: 0;
+      transform-origin: center center;
+    }
 
-      /* ここが肝：縦でも横でも必ず埋める */
-      width: max(100vw, calc(100vh * 16 / 9));
-      height: max(100vh, calc(100vw * 9 / 16));
+    /* ===============================
+       スマホが縦向き（portrait）
+       → 動画を90°回転
+       → 切れない最大化（contain）
+    =============================== */
+    @media (orientation: portrait) {
+      #yt {
+        /* 回転後の見かけ比率は 9:16 */
+        width:  min(100vw, calc(100vh * 9 / 16));
+        height: min(100vh, calc(100vw * 16 / 9));
+        transform: translate(-50%, -50%) rotate(90deg);
+      }
+    }
+
+    /* ===============================
+       スマホが横向き（landscape）
+       → 回転なし
+       → 切れない最大化（contain）
+    =============================== */
+    @media (orientation: landscape) {
+      #yt {
+        width:  min(100vw, calc(100vh * 16 / 9));
+        height: min(100vh, calc(100vw * 9 / 16));
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
     }
 
     /* 初動ガード（許可ダイアログ用） */
@@ -84,7 +107,7 @@
     referrerpolicy="no-referrer"
   ></iframe>
 
-  <!-- 表：YouTube（常に画面いっぱい） -->
+  <!-- 表：YouTube -->
   <div class="overlay">
     <iframe
       id="yt"
